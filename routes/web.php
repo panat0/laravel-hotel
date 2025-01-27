@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\RoomController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -24,4 +25,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+Route::get('/room', [RoomController::class, 'index'])
+    ->name('room.index');
+
+Route::get('/room', [RoomController::class, 'index'])
+    ->name('room.store');
+
+    Route::get('/room/booking', [RoomController::class,'index'])
+    ->name('room.booking');
+
+require __DIR__ . '/auth.php';
