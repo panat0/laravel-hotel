@@ -28,10 +28,10 @@ Route::middleware('auth')->group(function () {
 Route::get('/room', [RoomController::class, 'index'])
     ->name('room.index');
 
-Route::get('/room', [RoomController::class, 'index'])
+Route::post('/room', [RoomController::class, 'store'])
     ->name('room.store');
 
-    Route::get('/room/booking', [RoomController::class,'index'])
+Route::get('/room/booking', [RoomController::class,'booking'])
     ->name('room.booking');
 
 require __DIR__ . '/auth.php';

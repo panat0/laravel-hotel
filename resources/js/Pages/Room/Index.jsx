@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Head, usePage } from "@inertiajs/react";
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { router } from '@inertiajs/react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function RoomIndex() {
+export default function Index() {
     const { rooms, totalBookings, totalRevenue, totalCustomers, currentPage, lastPage, bookingData } = usePage().props;
 
     // เตรียมข้อมูลสำหรับกราฟแท่ง
@@ -15,11 +16,14 @@ export default function RoomIndex() {
             {
                 label: 'จำนวนลูกค้าที่จองห้อง',
                 data: bookingData.map((data) => data.customer_count),
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'green',
                 borderWidth: 1,
             }
         ]
+    };
+
+    const handleCreate = (e) => {
+        router.get('/room/booking');
     };
 
     const options = {
@@ -57,7 +61,7 @@ export default function RoomIndex() {
                                 <a href="#" className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">About</a>
                             </li>
                             <li>
-                                <a href="#" className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Booking</a>
+                                <button onClick={handleCreate} className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Booking</button>
                             </li>
                             <li>
                                 <a href="#" className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Pricing</a>
@@ -70,66 +74,93 @@ export default function RoomIndex() {
             <div className="min-h-screen bg-gray-50 py-6 px-4">
                 <Head title="Room Index" />
 
-                <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
-                    <h1 className="text-2xl font-bold text-gray-700 mb-4">ข้อมูลห้องพัก</h1>
+                <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6 w-3/4">
+                    <h1 className="text-2xl font-bold text-gray-700 mb-4">Graph DATA</h1>
 
                     {/* แสดงกราฟแท่ง */}
                     <div className="mb-6">
                         <Bar data={chartData} options={options} />
                     </div>
+                </div>
 
+                <div className='mx-auto m-7 w-3/4'>
                     {/* ข้อมูลสถิติ */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                         <div className="bg-blue-100 p-4 rounded-lg shadow">
-                            <p className="text-sm text-gray-600">จำนวนการเข้าพักทั้งหมด</p>
+                            <p className="text-sm text-gray-600">Total number of stays</p>
                             <p className="text-xl font-bold text-gray-800">{totalBookings || 0}</p>
                         </div>
                         <div className="bg-green-100 p-4 rounded-lg shadow">
-                            <p className="text-sm text-gray-600">รายได้ทั้งหมด</p>
-                            <p className="text-xl font-bold text-gray-800">{totalRevenue ? totalRevenue.toLocaleString() : "0"} บาท</p>
+                            <p className="text-sm text-gray-600">Total income</p>
+                            <p className="text-xl font-bold text-gray-800">{totalRevenue ? totalRevenue.toLocaleString() : "0"} THB</p>
                         </div>
                         <div className="bg-yellow-100 p-4 rounded-lg shadow">
-                            <p className="text-sm text-gray-600">จำนวนลูกค้าทั้งหมด</p>
+                            <p className="text-sm text-gray-600">All Costommer</p>
                             <p className="text-xl font-bold text-gray-800">{totalCustomers}</p>
                         </div>
                     </div>
+                </div>
 
-                    {/* รายการห้องพัก */}
+                {/* รายการห้องพัก */}
+                <div className='mx-auto w-3/4 bg-white shadow-lg p-6 text-center        '>
+                    <h2 className="text-2xl py-2 font-bold">Booking List</h2>
                     {rooms.length === 0 ? (
-                        <p className="text-center text-gray-500">ไม่มีข้อมูลห้องพัก</p>
+                        <p className="text-center text-gray-500">ไม่มีข้อมูลการจอง</p>
                     ) : (
-                        <ul className="space-y-4">
-                            {rooms.map((room) => (
-                                <li key={room.id} className="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-sm">
-                                    <div>
-                                        <p className="text-lg font-medium text-gray-800">ห้อง {room.room_number}</p>
-                                        <p className="text-sm text-gray-600">ประเภท: {room.roomTypeName}</p>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                        <table className="min-w-full table-auto ">
+                            <thead>
+                                <tr className="bg-gray-200 ">
+                                <th className="px-4 py-2 text-sm font-medium text-gray-700">Room Number</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Room Type</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Price per Night</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Customer Name</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Email</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Phone</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Start Date</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">End Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rooms.map((room) => (
+                                    <tr key={room.room_number} className="bg-gray-100">
+                                        <td className="px-4 py-5 text-sm text-gray-700">{room.room_number}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.roomTypeName}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.price_per_night} THB</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.customerName}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.email}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.phone}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.start_date}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.end_date}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     )}
+                    {/* การแบ่งหน้า */}
+                    <div className="mt-6 flex justify-end items-center">
+                        <p className="text-sm text-gray-600">
+                            หน้าปัจจุบัน: {currentPage} จาก {lastPage}
+                        </p>
+                        <div className="flex space-x-2">
+                            {currentPage > 1 && (
+                                <a href={`?page=${currentPage - 1}`} className="px-4 py-2 ml-3 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600">
+                                    ก่อนหน้า
+                                </a>
+                            )}
+                            {currentPage < lastPage && (
+                                <a href={`?page=${currentPage + 1}`} className="px-4 py-2 ml-3 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600">
+                                    ถัดไป
+                                </a>
+                            )}
+                        </div>
+                    </div>
                 </div>
+
+
             </div>
 
-            {/* การแบ่งหน้า */}
-            <div className="mt-6 flex justify-between items-center">
-                <p className="text-sm text-gray-600">
-                    หน้าปัจจุบัน: {currentPage} จาก {lastPage}
-                </p>
-                <div className="flex space-x-2">
-                    {currentPage > 1 && (
-                        <a href={`?page=${currentPage - 1}`} className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600">
-                            ก่อนหน้า
-                        </a>
-                    )}
-                    {currentPage < lastPage && (
-                        <a href={`?page=${currentPage + 1}`} className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600">
-                            ถัดไป
-                        </a>
-                    )}
-                </div>
-            </div>
+
+
         </>
     );
 }

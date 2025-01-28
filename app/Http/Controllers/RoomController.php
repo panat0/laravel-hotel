@@ -34,9 +34,22 @@ class RoomController extends Controller
 
         // ดึงข้อมูลห้องพัก
         $rooms = DB::table('rooms')
-            ->leftJoin('room_types', 'rooms.room_type_id', '=', 'room_types.id')
-            ->select('rooms.*', 'room_types.name as roomTypeName', 'room_types.price_per_night')
-            ->paginate(20);
+        ->join('room_types', 'rooms.room_type_id', '=', 'room_types.id') // เปลี่ยนเป็น join (inner join)
+        ->join('bookings', 'rooms.id', '=', 'bookings.room_id') // เปลี่ยนเป็น join (inner join)
+        ->join('customers', 'bookings.customer_id', '=', 'customers.id') // เปลี่ยนเป็น join (inner join)
+        ->select(
+            'rooms.room_number',
+            'room_types.name as roomTypeName',
+            'room_types.price_per_night',
+            'customers.name as customerName',
+            'customers.email',
+            'customers.phone',
+            'bookings.start_date',
+            'bookings.end_date'
+        )
+        ->paginate(10);
+
+
 
         return Inertia::render('Room/Index', [
             'rooms' => $rooms->items(),
@@ -49,6 +62,28 @@ class RoomController extends Controller
         ]);
     }
 
+    //ฟังก์ชันสำหรับการบันทึกการจอง
+    // public function booking(Request $request)
+    // {
+    //     // Validate ข้อมูลที่ส่งมาจากฟอร์ม
+    //     $validated = $request->validate([
+    //         'customer_id' => 'required|exists:customers,id',
+    //         'room_id' => 'required|exists:rooms,id',
+    //         'start_date' => 'required|date',
+    //         'end_date' => 'required|date|after_or_equal:start_date',
+    //     ]);
+
+    //     // สร้าง Booking ใหม่
+    //     $booking = Booking::create([
+    //         'customer_id' => $validated['customer_id'],
+    //         'room_id' => $validated['room_id'],
+    //         'start_date' => $validated['start_date'],
+    //         'end_date' => $validated['end_date'],
+    //     ]);
+
+    //     // ส่งกลับข้อมูลไปยังหน้าเดิม
+    //     return redirect()->back()->with('message', 'Booking Created Successfully');
+    // }
     /**
      * Show the form for creating a new resource.
      */
