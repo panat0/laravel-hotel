@@ -3,27 +3,30 @@ import { Head, usePage } from "@inertiajs/react";
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { router } from '@inertiajs/react';
+import { Inertia } from '@inertiajs/inertia';
+import { useRouter } from '@inertiajs/inertia-react';
+
+
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function Index() {
     const { rooms, totalBookings, totalRevenue, totalCustomers, currentPage, lastPage, bookingData } = usePage().props;
 
+    const [editingRoom, setEditingRoom] = useState(null); // เก็บห้องที่กำลังแก้ไข
+    const [editData, setEditData] = useState({}); // เก็บข้อมูลที่ถูกแก้ไข
+
     // เตรียมข้อมูลสำหรับกราฟแท่ง
     const chartData = {
         labels: bookingData.map((data) => data.date),
         datasets: [
             {
-                label: 'จำนวนลูกค้าที่จองห้อง',
+                label: 'จำนวนการจองห้อง',
                 data: bookingData.map((data) => data.customer_count),
                 backgroundColor: 'green',
                 borderWidth: 1,
             }
         ]
-    };
-
-    const handleCreate = (e) => {
-        router.get('/room/booking');
     };
 
     const options = {
@@ -38,6 +41,35 @@ export default function Index() {
             }
         },
     };
+
+    const handleCreate = (e) => {
+        router.get('/room/bookings');
+    };
+
+
+    const handleSave = (roomId) => {
+        router.put(`/rooms/${roomId}`, editData, {
+            onSuccess: () => setEditingRoom(null),
+        });
+    };
+
+    const handleEdit = (booking) => {
+        Inertia.put(route('bookings.update', { booking: booking.id }), {
+            room_id: booking.room_id,
+            start_date: booking.start_date,
+            end_date: booking.end_date,
+        });
+    };
+
+
+    const handleDelete = (bookingId) => {
+        if (confirm('Are you sure you want to delete this booking?')) {
+            Inertia.delete(route('bookings.destroy', { booking: bookingId }));
+        }
+    };
+
+
+
 
     return (
         <>
@@ -74,8 +106,8 @@ export default function Index() {
             <div className="min-h-screen bg-gray-50 py-6 px-4">
                 <Head title="Room Index" />
 
-                <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6 w-3/4">
-                    <h1 className="text-2xl font-bold text-gray-700 mb-4">Graph DATA</h1>
+                <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6 w-11/12">
+                    <h1 className="text-2xl font-bold text-gray-700 mb-4 w-full">Graph DATA</h1>
 
                     {/* แสดงกราฟแท่ง */}
                     <div className="mb-6">
@@ -102,7 +134,7 @@ export default function Index() {
                 </div>
 
                 {/* รายการห้องพัก */}
-                <div className='mx-auto w-3/4 bg-white shadow-lg p-6 text-center        '>
+                <div className='mx-auto w-11/12 bg-white shadow-lg p-6 text-center        '>
                     <h2 className="text-2xl py-2 font-bold">Booking List</h2>
                     {rooms.length === 0 ? (
                         <p className="text-center text-gray-500">ไม่มีข้อมูลการจอง</p>
@@ -110,27 +142,40 @@ export default function Index() {
                         <table className="min-w-full table-auto ">
                             <thead>
                                 <tr className="bg-gray-200 ">
-                                <th className="px-4 py-2 text-sm font-medium text-gray-700">Room Number</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Customer Name</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Room Number</th>
                                     <th className="px-4 py-2 text-sm font-medium text-gray-700">Room Type</th>
                                     <th className="px-4 py-2 text-sm font-medium text-gray-700">Price per Night</th>
-                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Customer Name</th>
-                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Email</th>
                                     <th className="px-4 py-2 text-sm font-medium text-gray-700">Phone</th>
-                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Start Date</th>
-                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">End Date</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Check-in </th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Check-out</th>
+                                    <th className="px-4 py-2 text-sm font-medium text-gray-700">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {rooms.map((room) => (
                                     <tr key={room.room_number} className="bg-gray-100">
+                                        <td className="px-4 py-2 text-sm text-gray-700">{room.customerName}</td>
                                         <td className="px-4 py-5 text-sm text-gray-700">{room.room_number}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{room.roomTypeName}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{room.price_per_night} THB</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{room.customerName}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{room.email}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{room.phone}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{room.start_date}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{room.end_date}</td>
+                                        <td>
+                                            <button
+                                                className="bg-sky-400 py-1 px-3 mr-3 rounded-lg text-white"
+                                                onClick={() => handleEdit(room)}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="bg-red-500 py-1 px-3 rounded-lg text-white"
+                                                onClick={() => handleDelete(room.customer_id)}
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

@@ -1,121 +1,167 @@
-import React, { useState } from 'react';
-import { usePage, Inertia } from '@inertiajs/react';
+import { useState, useEffect } from "react";
+import { Inertia } from "@inertiajs/inertia";
+import { usePage } from "@inertiajs/react";
+import { useNavigate } from 'react-router-dom';
 
-export default function BookingForm() {
-    const { rooms, customers } = usePage().props;
+const Booking = () => {
+    const { rooms } = usePage().props; // รับข้อมูลห้องจาก Laravel
 
     const [formData, setFormData] = useState({
-        customer_id: '',
-        room_id: '',
-        start_date: '',
-        end_date: '',
+        customer_name: "",
+        email: "",
+        phone: "",
+        room_number: "", // เปลี่ยนจาก room_id เป็น room_number
+        start_date: "",
+        end_date: "",
     });
 
-    const [errors, setErrors] = useState({});
-
-    // การจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }));
-    };
-
-    // การส่งข้อมูลฟอร์ม
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        // ตรวจสอบข้อมูลเบื้องต้น
-        Inertia.post('/bookings', formData, {
-            onError: (err) => {
-                setErrors(err);
-            },
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
         });
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        Inertia.post(route("room.store"), formData);
+    };
+
+    const handleHome = (e) => {
+        Inertia.visit('/room');
+    };
+
     return (
-        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
-            <h1 className="text-2xl font-bold text-gray-700 mb-4">Booking Form</h1>
-            <form onSubmit={handleSubmit}>
-                {/* Customer */}
-                <div className="mb-4">
-                    <label htmlFor="customer_id" className="block text-sm font-medium text-gray-700">Customer</label>
-                    <select
-                        id="customer_id"
-                        name="customer_id"
-                        value={formData.customer_id}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full px-4 py-2 bg-gray-100 rounded-lg border border-gray-300"
-                    >
-                        <option value="">Select Customer</option>
-                        {customers.map((customer) => (
-                            <option key={customer.id} value={customer.id}>
-                                {customer.name} ({customer.email})
-                            </option>
-                        ))}
-                    </select>
-                    {errors.customer_id && <p className="text-red-500 text-sm">{errors.customer_id}</p>}
-                </div>
-
-                {/* Room */}
-                <div className="mb-4">
-                    <label htmlFor="room_id" className="block text-sm font-medium text-gray-700">Room</label>
-                    <select
-                        id="room_id"
-                        name="room_id"
-                        value={formData.room_id}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full px-4 py-2 bg-gray-100 rounded-lg border border-gray-300"
-                    >
-                        <option value="">Select Room</option>
-                        {rooms.map((room) => (
-                            <option key={room.id} value={room.id}>
-                                {room.room_number} - {room.roomTypeName}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.room_id && <p className="text-red-500 text-sm">{errors.room_id}</p>}
-                </div>
-
-                {/* Start Date */}
-                <div className="mb-4">
-                    <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">Start Date</label>
-                    <input
-                        type="date"
-                        id="start_date"
-                        name="start_date"
-                        value={formData.start_date}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full px-4 py-2 bg-gray-100 rounded-lg border border-gray-300"
-                    />
-                    {errors.start_date && <p className="text-red-500 text-sm">{errors.start_date}</p>}
-                </div>
-
-                {/* End Date */}
-                <div className="mb-4">
-                    <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">End Date</label>
-                    <input
-                        type="date"
-                        id="end_date"
-                        name="end_date"
-                        value={formData.end_date}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full px-4 py-2 bg-gray-100 rounded-lg border border-gray-300"
-                    />
-                    {errors.end_date && <p className="text-red-500 text-sm">{errors.end_date}</p>}
-                </div>
-
-                {/* Submit Button */}
-                <div className="mb-4">
-                    <button
-                        type="submit"
-                        className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                    >
-                        Submit Booking
+        <>
+            {/*Nav */}
+            <nav className="bg-white border-gray-200 dark:bg-gray-900 ">
+                <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+                    <a href="https://flowbite.com/" className="flex items-center space-x-3 rtl:space-x-reverse">
+                        <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">MY HOTEL</span>
+                    </a>
+                    <button data-collapse-toggle="navbar-default" type="button" className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
+                        <span className="sr-only">Open main menu</span>
+                        <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15" />
+                        </svg>
                     </button>
+                    <div className="hidden w-full md:block md:w-auto" id="navbar-default">
+                        <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+                            <li>
+                                <button onClick={handleHome} className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Home</button>
+                            </li>
+                            <li>
+                                <a href="#" className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">About</a>
+                            </li>
+                            <li>
+                                <button className="block py-2 px-3 text-white bg-blue-700 rounded-sm md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500" >Booking</button>
+                            </li>
+                            <li>
+                                <a href="#" className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Pricing</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </nav>
+
+            <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg ">
+                <h2 className="text-2xl font-semibold mb-6 text-center text-bold ">BookingFrom</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-gray-700 font-medium">Name</label>
+                        <input
+                            type="text"
+                            name="customer_name"
+                            value={formData.customer_name}
+                            onChange={handleChange}
+                            className="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium">Phone</label>
+                        <input
+                            type="text"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            className="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium">Room Number</label>
+                        <select
+                            type="text"
+                            name="room_number"
+                            value={formData.room_number}
+                            onChange={handleChange}
+                            className="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            required
+                        >
+                            <option value="">เลือกหมายเลขห้อง</option>
+                            {rooms.map((room) => (
+                                <option key={room.id} value={room.room_number}>
+                                    {room.room_number}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium">Room Type</label>
+                        <select
+                            name="room_type_id"
+                            value={formData.room_type_id}
+                            onChange={handleChange}
+                            className="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            required
+                        >
+                            <option value="">เลือกประเภทห้อง</option>
+                            <option value="1">Single</option>
+                            <option value="2">Double</option>
+                            <option value="3">Suite</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium">Check-in date</label>
+                        <input
+                            type="date"
+                            name="start_date"
+                            value={formData.start_date}
+                            onChange={handleChange}
+                            className="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-gray-700 font-medium">Check-out date</label>
+                        <input
+                            type="date"
+                            name="end_date"
+                            value={formData.end_date}
+                            onChange={handleChange}
+                            className="w-full mt-1 p-2 border rounded-lg focus:ring focus:ring-blue-300"
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">
+                        จอง
+                    </button>
+                </form>
+            </div>
+        </>
     );
-}
+};
+
+export default Booking;

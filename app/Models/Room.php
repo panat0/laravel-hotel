@@ -14,4 +14,11 @@ class Room extends Model
     {
         return $this->belongsTo(RoomType::class);
     }
+
+    protected $fillable = [
+        'room_number',
+        'room_type_id',
+        'price_per_night',
+    ];
+
 }

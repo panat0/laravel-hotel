@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Room;
-use Inertia\Inertia;
 use App\Models\Booking;
+use App\Models\Room;
+use App\Models\customer;
+
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
 class RoomController extends Controller
@@ -34,20 +36,20 @@ class RoomController extends Controller
 
         // ดึงข้อมูลห้องพัก
         $rooms = DB::table('rooms')
-        ->join('room_types', 'rooms.room_type_id', '=', 'room_types.id') // เปลี่ยนเป็น join (inner join)
-        ->join('bookings', 'rooms.id', '=', 'bookings.room_id') // เปลี่ยนเป็น join (inner join)
-        ->join('customers', 'bookings.customer_id', '=', 'customers.id') // เปลี่ยนเป็น join (inner join)
-        ->select(
-            'rooms.room_number',
-            'room_types.name as roomTypeName',
-            'room_types.price_per_night',
-            'customers.name as customerName',
-            'customers.email',
-            'customers.phone',
-            'bookings.start_date',
-            'bookings.end_date'
-        )
-        ->paginate(10);
+            ->join('room_types', 'rooms.room_type_id', '=', 'room_types.id') // เปลี่ยนเป็น join (inner join)
+            ->join('bookings', 'rooms.id', '=', 'bookings.room_id') // เปลี่ยนเป็น join (inner join)
+            ->join('customers', 'bookings.customer_id', '=', 'customers.id') // เปลี่ยนเป็น join (inner join)
+            ->select(
+                'rooms.room_number',
+                'room_types.name as roomTypeName',
+                'room_types.price_per_night',
+                'customers.name as customerName',
+                'customers.email',
+                'customers.phone',
+                'bookings.start_date',
+                'bookings.end_date'
+            )
+            ->paginate(7);
 
 
 
@@ -62,31 +64,63 @@ class RoomController extends Controller
         ]);
     }
 
-    //ฟังก์ชันสำหรับการบันทึกการจอง
-    // public function booking(Request $request)
-    // {
-    //     // Validate ข้อมูลที่ส่งมาจากฟอร์ม
-    //     $validated = $request->validate([
-    //         'customer_id' => 'required|exists:customers,id',
-    //         'room_id' => 'required|exists:rooms,id',
-    //         'start_date' => 'required|date',
-    //         'end_date' => 'required|date|after_or_equal:start_date',
-    //     ]);
+    public function booking()
+    {
+        $rooms = DB::table('rooms')->select('id', 'room_number')->get();
 
-    //     // สร้าง Booking ใหม่
-    //     $booking = Booking::create([
-    //         'customer_id' => $validated['customer_id'],
-    //         'room_id' => $validated['room_id'],
-    //         'start_date' => $validated['start_date'],
-    //         'end_date' => $validated['end_date'],
-    //     ]);
+        return Inertia::render('Room/Booking', [
+            'rooms' => $rooms
+        ]);
+    }
 
-    //     // ส่งกลับข้อมูลไปยังหน้าเดิม
-    //     return redirect()->back()->with('message', 'Booking Created Successfully');
-    // }
-    /**
-     * Show the form for creating a new resource.
-     */
+
+    public function store(Request $request)
+    {
+        try {
+            // ตรวจสอบข้อมูลที่รับมา
+            $validated = $request->validate([
+                'customer_name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255',
+                'phone' => 'required|string|max:255',
+                'room_number' => 'required|string|max:255',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after:start_date',
+            ]);
+
+            DB::transaction(function () use ($validated) {
+                // ค้นหา room_id จาก room_number
+                $room = DB::table('rooms')->where('room_number', $validated['room_number'])->first();
+
+                if (!$room) {
+                    throw new \Exception('Room not found');
+                }
+
+                // สร้างลูกค้าใหม่และรับ ID ของลูกค้า
+                $customer_id = DB::table('customers')->insertGetId([
+                    'name' => $validated['customer_name'],
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // บันทึกการจองห้อง
+                DB::table('bookings')->insert([
+                    'customer_id' => $customer_id,
+                    'room_id' => $room->id, // ใช้ room_id ที่ค้นหาได้
+                    'start_date' => $validated['start_date'],
+                    'end_date' => $validated['end_date'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            });
+
+            return redirect()->route('room.index')->with('success', 'Booking created successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to create booking. Please try again.');
+        }
+    }
+
     public function create()
     {
         //
@@ -95,10 +129,7 @@ class RoomController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
-    }
+
 
     /**
      * Display the specified resource.
@@ -119,16 +150,9 @@ class RoomController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
-    }
 }
